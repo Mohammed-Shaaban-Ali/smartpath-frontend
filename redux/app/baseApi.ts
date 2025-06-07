@@ -17,10 +17,10 @@ export interface SuccessResponse<DataType = any> {
   data: DataType;
 }
 const baseQuery = fetchBaseQuery({
-  baseUrl: "https://pokeapi.co/api/v2/",
+  baseUrl: "http://164.128.130.9:2530/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as any).auth.token;
-    headers.set("Authorization", `Bearer ${token}`);
+    if (token) headers.set("Authorization", `Bearer ${token}`);
     return headers;
   },
 });
@@ -40,7 +40,7 @@ const baseQueryWithReauth: typeof baseQuery = async (
       toast.error(customizedError.message || " something went wrong");
   } else {
     const customizedData = result.data as SuccessResponse;
-    if (method != "get") toast.success(customizedData.message);
+    if (method != "GET") toast.success(customizedData.message);
   }
   return result;
 };

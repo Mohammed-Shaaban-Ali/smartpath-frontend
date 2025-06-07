@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import Loading from "./Loading";
+import ReduxProvider from "@/Providers/reduxProvider";
 
 // ✅ Import Roboto
 const roboto = Roboto({
@@ -26,7 +27,7 @@ export default async function Layout({
     <html lang={"en"} dir="ltr" className={roboto.className}>
       <body className="antialiased">
         <Suspense fallback={<Loading />}>
-          {children}
+          <ReduxProvider>{children}</ReduxProvider>
           <Toaster />
         </Suspense>
       </body>
