@@ -5,10 +5,15 @@ import * as Yup from "yup";
 import CustomInput from "@/components/shared/Form/CustomInput";
 import { Button } from "@/components/ui/button";
 import { handleReqWithToaster } from "@/lib/handle-req-with-toaster";
-import { useRouter } from "next/navigation";
-import { useAddSectionMutation } from "@/redux/features/section/sectionApi";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  useAddSectionMutation,
+  useGetSingleSectionQuery,
+  useUpdateSectionMutation,
+} from "@/redux/features/section/sectionApi";
 import { ImageUploader } from "@/components/shared/Form/ImageUploader";
 import MainTitle from "@/components/shared/MainTitle";
+import TextEditor from "@/components/shared/Form/TextEditor";
 
 // Enhanced validation schema
 const SectionSchema = Yup.object({
@@ -55,19 +60,33 @@ const SectionSchema = Yup.object({
 type Props = {};
 
 function Page({}: Props) {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
+
+  const { data, isLoading: getLoading } = useGetSingleSectionQuery(id, {
+    skip: !id || id == "add",
+  });
   const [addSection, { isLoading }] = useAddSectionMutation();
+  const [updateSection, { isLoading: updateLoading }] =
+    useUpdateSectionMutation();
   const handleSubmit = (values: any) => {
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("body", values.body);
     formData.append("icon", values.icon);
-    handleReqWithToaster("section....", async () => {
-      const res = await addSection(formData).unwrap();
+    handleReqWithToaster("section loading ....", async () => {
+      if (id == "add") {
+        await addSection(formData).unwrap();
+      } else {
+        await updateSection({ id, section: formData }).unwrap();
+      }
 
       router.push("/sections");
     });
   };
+
+  if (getLoading) return <h1>Loading...</h1>;
   return (
     <section className="w-full flex flex-col gap-6">
       <MainTitle
@@ -80,9 +99,9 @@ function Page({}: Props) {
       >
         <Formik
           initialValues={{
-            title: "",
-            body: "",
-            icon: null,
+            title: data?.data?.title ?? "",
+            body: data?.data?.body ?? "",
+            icon: data?.data?.icon ?? null,
           }}
           validationSchema={SectionSchema}
           onSubmit={handleSubmit}
@@ -99,20 +118,15 @@ function Page({}: Props) {
                 placeholder="Enter your title"
               />
 
-              <CustomInput
-                label="Body"
-                name="body"
-                type="text"
-                placeholder="Enter your body"
-                as="textarea"
-              />
+              <TextEditor label="Body" formikProps={formikProps} name="body" />
               <ImageUploader
                 formikProps={formikProps}
                 title="Icon"
                 name="icon"
+                initialImage={data?.data?.icon}
               />
               <Button
-                disabled={isLoading}
+                disabled={isLoading || updateLoading}
                 className=" ml-auto w-[200px]"
                 type="submit"
                 size={"lg"}

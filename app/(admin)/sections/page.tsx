@@ -32,7 +32,7 @@ function page({}: Props) {
         description="Details of users information and status"
         children={
           <Link href="/sections/add">
-            <Button size="sm" className="flex items-center gap-2">
+            <Button size="lg" className="flex items-center gap-2">
               <PlusIcon />
               Add New Section
             </Button>

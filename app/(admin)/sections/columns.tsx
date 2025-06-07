@@ -1,4 +1,6 @@
 import { ActionsCell } from "@/components/dashboard/DataTable/Cells/ActionsCell";
+import DeleteDialog from "@/components/dialog/DeleteDialog";
+import { useDeleteSectionMutation } from "@/redux/features/section/sectionApi";
 
 import { ISection } from "@/types/sections";
 import { ColumnDef } from "@tanstack/react-table";
@@ -38,9 +40,15 @@ export const useColumns = () => {
       header: "Action",
       accessorKey: "action",
       cell: ({ row }) => {
+        const [deleted, { isLoading }] = useDeleteSectionMutation();
         return (
           <ActionsCell>
-            <span>asss</span>
+            <DeleteDialog
+              deleteFunction={deleted}
+              id={row.original._id}
+              isDeleting={isLoading}
+              title={"Are you sure you want to delete this section?"}
+            />
           </ActionsCell>
         );
       },

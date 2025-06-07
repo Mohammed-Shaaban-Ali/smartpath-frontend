@@ -46,6 +46,7 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "react-select": "^5.10.1",
+    "react-simple-wysiwyg": "^3.2.2",
     "react-slider": "^2.0.6",
     "recharts": "^2.15.3",
     "slick-carousel": "^1.8.1",

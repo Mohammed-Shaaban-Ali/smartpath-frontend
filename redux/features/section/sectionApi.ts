@@ -22,7 +22,41 @@ const sectionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["section"],
     }),
+
+    // update section
+    updateSection: build.mutation<
+      SuccessResponse<any>,
+      { id: string; section: FormData }
+    >({
+      query: ({ id, section }) => ({
+        url: `/section/${id}`,
+        method: "PUT",
+        body: section,
+      }),
+      invalidatesTags: ["section"],
+    }),
+
+    // get single section
+    getSingleSection: build.query<SuccessResponse<ISection>, string>({
+      query: (id) => `/section/${id}`,
+      providesTags: ["section"],
+    }),
+
+    // delete section
+    deleteSection: build.mutation<SuccessResponse<any>, string>({
+      query: (id) => ({
+        url: `/section/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["section"],
+    }),
   }),
 });
 
-export const { useGetAllSectionsQuery, useAddSectionMutation } = sectionApi;
+export const {
+  useGetAllSectionsQuery,
+  useAddSectionMutation,
+  useGetSingleSectionQuery,
+  useUpdateSectionMutation,
+  useDeleteSectionMutation,
+} = sectionApi;
