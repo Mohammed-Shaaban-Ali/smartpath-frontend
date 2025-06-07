@@ -1,0 +1,130 @@
+"use client";
+import React from "react";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import CustomInput from "@/components/shared/Form/CustomInput";
+import { Button } from "@/components/ui/button";
+import { handleReqWithToaster } from "@/lib/handle-req-with-toaster";
+import { useRouter } from "next/navigation";
+import { useAddSectionMutation } from "@/redux/features/section/sectionApi";
+import { ImageUploader } from "@/components/shared/Form/ImageUploader";
+import MainTitle from "@/components/shared/MainTitle";
+
+// Enhanced validation schema
+const SectionSchema = Yup.object({
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Title must be at least 3 characters long")
+    .max(100, "Title must not exceed 100 characters")
+    .trim("Title cannot contain leading/trailing spaces"),
+
+  body: Yup.string()
+    .required("Body content is required")
+    .min(10, "Body must be at least 10 characters long")
+    .max(1000, "Body must not exceed 1000 characters")
+    .trim("Body cannot contain leading/trailing spaces"),
+
+  icon: Yup.mixed()
+    .required("Icon is required")
+    .test("fileSize", "File size must be less than 5MB", (value) => {
+      if (!value) return false;
+      if (value instanceof File) {
+        return value.size <= 5 * 1024 * 1024; // 5MB
+      }
+      return true;
+    })
+    .test(
+      "fileType",
+      "Only image files are allowed (JPEG, PNG, GIF, WebP)",
+      (value) => {
+        if (!value) return false;
+        if (value instanceof File) {
+          const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+          ];
+          return allowedTypes.includes(value.type);
+        }
+        return true;
+      }
+    ),
+});
+
+type Props = {};
+
+function Page({}: Props) {
+  const router = useRouter();
+  const [addSection, { isLoading }] = useAddSectionMutation();
+  const handleSubmit = (values: any) => {
+    const formData = new FormData();
+    formData.append("title", values.title);
+    formData.append("body", values.body);
+    formData.append("icon", values.icon);
+    handleReqWithToaster("section....", async () => {
+      const res = await addSection(formData).unwrap();
+
+      router.push("/sections");
+    });
+  };
+  return (
+    <section className="w-full flex flex-col gap-6">
+      <MainTitle
+        title="Add Section"
+        description="Details of section information and status"
+      />
+      <section
+        className=" border border-gray-200 p-5 rounded-md
+       "
+      >
+        <Formik
+          initialValues={{
+            title: "",
+            body: "",
+            icon: null,
+          }}
+          validationSchema={SectionSchema}
+          onSubmit={handleSubmit}
+        >
+          {(formikProps) => (
+            <form
+              onSubmit={formikProps.handleSubmit}
+              className="w-full flex flex-col gap-4"
+            >
+              <CustomInput
+                label="Title"
+                name="title"
+                type="text"
+                placeholder="Enter your title"
+              />
+
+              <CustomInput
+                label="Body"
+                name="body"
+                type="text"
+                placeholder="Enter your body"
+                as="textarea"
+              />
+              <ImageUploader
+                formikProps={formikProps}
+                title="Icon"
+                name="icon"
+              />
+              <Button
+                disabled={isLoading}
+                className=" ml-auto w-[200px]"
+                type="submit"
+                size={"lg"}
+              >
+                Submit
+              </Button>
+            </form>
+          )}
+        </Formik>
+      </section>
+    </section>
+  );
+}
+
+export default Page;

@@ -33,52 +33,10 @@ export const SidebarItems = () => {
       Icon: Users,
       children: [
         {
-          label: "Customers",
-          href: "/customers",
+          label: "Users",
+          href: "/users",
         },
       ],
-    },
-    {
-      label: "Plans management",
-      Icon: List,
-      children: [
-        {
-          label: "Category",
-          href: "/category",
-        },
-        {
-          label: "Features",
-          href: "/features",
-        },
-        {
-          label: "Duration",
-          href: "/duration",
-        },
-        {
-          label: "Plans",
-          href: "/plans",
-        },
-      ],
-    },
-    {
-      label: "Pending Projects",
-      Icon: CircleDashed,
-      path: "/pending-projects",
-    },
-    {
-      label: "Subscriptions",
-      Icon: CalendarDays,
-      path: "/subscriptions",
-    },
-    {
-      label: "Coupons",
-      Icon: Percent,
-      path: "/coupons",
-    },
-    {
-      label: "Invoices",
-      Icon: FileText,
-      path: "/invoices",
     },
   ];
 

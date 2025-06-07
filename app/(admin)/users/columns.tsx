@@ -1,3 +1,4 @@
+import { ActionsCell } from "@/components/dashboard/DataTable/Cells/ActionsCell";
 import StatusCell from "@/components/dashboard/DataTable/Cells/StatusCell";
 import { ShowUserCourses } from "@/components/dialog/ShowUserCourses";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,6 +90,18 @@ export const useColumns = () => {
       accessorKey: "enrolledCourses",
       cell: ({ row }) => {
         return <ShowUserCourses />;
+      },
+    },
+
+    {
+      header: "Action",
+      accessorKey: "action",
+      cell: ({ row }) => {
+        return (
+          <ActionsCell>
+            <span>asss</span>
+          </ActionsCell>
+        );
       },
     },
   ];

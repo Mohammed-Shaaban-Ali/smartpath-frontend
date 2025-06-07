@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { ErrorMessage, Field } from "formik";
 import React from "react";
 
@@ -25,7 +26,10 @@ function CustomInput({
         name={name}
         placeholder={placeholder}
         as={as}
-        className="w-full text-14 p-3 border border-gray-300 bg-gray-50 rounded-md placeholder:text-black/50 text-black h-[48px] outline-none"
+        className={cn(
+          "w-full text-14 p-3 border border-gray-300 bg-gray-50 rounded-md placeholder:text-black/50 text-black h-[48px] outline-none",
+          as === "textarea" && "h-[220px]"
+        )}
       />
       <ErrorMessage
         name={name}
