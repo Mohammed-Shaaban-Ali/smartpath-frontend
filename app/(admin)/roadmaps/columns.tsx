@@ -1,6 +1,7 @@
 import { ActionsCell } from "@/components/dashboard/DataTable/Cells/ActionsCell";
 import DeleteDialog from "@/components/dialog/DeleteDialog";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils";
 import { useDeleteroadmapMutation } from "@/redux/features/roadmap/roadmapApi";
 import { IRoadmap } from "@/types/roadmap";
 import { ColumnDef } from "@tanstack/react-table";
@@ -82,6 +83,13 @@ export const useColumns = () => {
         return (
           <span className="font-semibold">{row.original.framework?.title}</span>
         );
+      },
+    },
+    {
+      header: "Created At",
+      accessorKey: "createdAt",
+      cell: ({ row }) => {
+        return formatDate(row.original.createdAt);
       },
     },
     {

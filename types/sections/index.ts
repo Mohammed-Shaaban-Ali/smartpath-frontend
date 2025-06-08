@@ -3,4 +3,5 @@ export type ISection = {
   title: string;
   icon: string;
   body: string;
+  createdAt: string;
 };

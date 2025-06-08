@@ -1,6 +1,7 @@
 import { ActionsCell } from "@/components/dashboard/DataTable/Cells/ActionsCell";
 import DeleteDialog from "@/components/dialog/DeleteDialog";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils";
 import { useDeleteSectionMutation } from "@/redux/features/section/sectionApi";
 
 import { ISection } from "@/types/sections";
@@ -40,6 +41,13 @@ export const useColumns = () => {
             />
           </div>
         );
+      },
+    },
+    {
+      header: "Created At",
+      accessorKey: "createdAt",
+      cell: ({ row }) => {
+        return formatDate(row.original.createdAt);
       },
     },
     {

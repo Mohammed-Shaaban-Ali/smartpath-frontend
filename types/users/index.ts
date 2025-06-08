@@ -16,4 +16,5 @@ export type IUser = {
     progress: string;
   }[];
   isBlocked: boolean;
+  createdAt: string;
 };

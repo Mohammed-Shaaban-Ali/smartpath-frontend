@@ -3,6 +3,7 @@ import StatusCell from "@/components/dashboard/DataTable/Cells/StatusCell";
 import { ShowUserCourses } from "@/components/dialog/ShowUserCourses";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { handleReqWithToaster } from "@/lib/handle-req-with-toaster";
+import { formatDate } from "@/lib/utils";
 import { useUpdateBlockUserMutation } from "@/redux/features/user/userApi";
 import { IUser } from "@/types/users";
 import { ColumnDef } from "@tanstack/react-table";
@@ -132,14 +133,10 @@ export const useColumns = () => {
     },
 
     {
-      header: "Action",
-      accessorKey: "action",
+      header: "Created At",
+      accessorKey: "createdAt",
       cell: ({ row }) => {
-        return (
-          <ActionsCell>
-            <span>asss</span>
-          </ActionsCell>
-        );
+        return formatDate(row.original.createdAt);
       },
     },
   ];
