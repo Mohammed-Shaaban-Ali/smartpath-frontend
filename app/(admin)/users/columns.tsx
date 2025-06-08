@@ -2,6 +2,8 @@ import { ActionsCell } from "@/components/dashboard/DataTable/Cells/ActionsCell"
 import StatusCell from "@/components/dashboard/DataTable/Cells/StatusCell";
 import { ShowUserCourses } from "@/components/dialog/ShowUserCourses";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { handleReqWithToaster } from "@/lib/handle-req-with-toaster";
+import { useUpdateBlockUserMutation } from "@/redux/features/user/userApi";
 import { IUser } from "@/types/users";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -12,7 +14,7 @@ export const useColumns = () => {
       accessorKey: "_id",
     },
     {
-      header: "Name ",
+      header: "Name",
       accessorKey: "name",
       cell: ({ row }) => {
         return (
@@ -29,6 +31,27 @@ export const useColumns = () => {
               </span>
             </div>
           </div>
+        );
+      },
+    },
+    {
+      header: "Blocked User",
+      accessorKey: "isBlocked",
+      cell: ({ row }) => {
+        const [updateBlock, { isLoading }] = useUpdateBlockUserMutation();
+        const handleUpdateBlock = async () => {
+          handleReqWithToaster("Loading....", async () => {
+            await updateBlock(row.original._id);
+          });
+        };
+
+        return (
+          <StatusCell
+            status={row.original.isBlocked ? "inactive" : "active"}
+            disabled={isLoading}
+            onclick={handleUpdateBlock}
+            title={row.original.isBlocked ? "Blocked" : "active"}
+          />
         );
       },
     },
@@ -79,7 +102,7 @@ export const useColumns = () => {
                 </div>
               </div>
             ) : (
-              <StatusCell status={"inactive"} title="No Roadmap" />
+              <StatusCell status={"no-data"} title="No Roadmap" />
             )}
           </div>
         );
@@ -89,7 +112,22 @@ export const useColumns = () => {
       header: "Enrolled Courses",
       accessorKey: "enrolledCourses",
       cell: ({ row }) => {
-        return <ShowUserCourses />;
+        if (row.original.enrolledCourses?.length > 0) {
+          return (
+            <ShowUserCourses
+              name={row.original.name}
+              enrolledCourses={row.original.enrolledCourses}
+            />
+          );
+        } else {
+          return (
+            <StatusCell
+              className="rounded-md"
+              status={"no-data"}
+              title="No Courses"
+            />
+          );
+        }
       },
     },
 

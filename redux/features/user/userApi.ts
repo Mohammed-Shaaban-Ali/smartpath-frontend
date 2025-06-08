@@ -10,8 +10,18 @@ const usersApi = baseApi.injectEndpoints({
       { page: number }
     >({
       query: ({ page }) => `/user/dashboard/users?page=${page}`,
+      providesTags: ["user"],
+    }),
+
+    // update user block
+    updateBlockUser: build.mutation<SuccessResponse<any>, string>({
+      query: (id) => ({
+        url: `/user/dashboard/users/block/${id}`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["user"],
     }),
   }),
 });
 
-export const { useGetAllUsersQuery } = usersApi;
+export const { useGetAllUsersQuery, useUpdateBlockUserMutation } = usersApi;

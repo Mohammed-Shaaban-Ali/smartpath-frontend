@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "no-data";
   title?: string;
   onclick?: () => void;
   disabled?: boolean;
@@ -15,11 +15,14 @@ function StatusCell({ status, onclick, disabled, className, title }: Props) {
   const statusStyles = {
     active: "bg-green-50 hover:bg-green-100 text-green-600 border-green-300",
     inactive: "bg-red-50 hover:bg-red-100 text-red-600 border-red-300",
+    "no-data":
+      "bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border-yellow-300",
   };
 
   const dotStyles = {
     active: "bg-green-600",
     inactive: "bg-red-600",
+    "no-data": "bg-yellow-600",
   };
 
   const handleClick = () => {

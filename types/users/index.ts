@@ -15,4 +15,5 @@ export type IUser = {
     watchedVideos: string;
     progress: string;
   }[];
+  isBlocked: boolean;
 };

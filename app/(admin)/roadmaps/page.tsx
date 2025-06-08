@@ -4,12 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useColumns } from "./columns";
 import { useSearchParams } from "next/navigation";
 import MainTitle from "@/components/shared/MainTitle";
-import { useGetAllSectionsQuery } from "@/redux/features/section/sectionApi";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
-import { useGetAllTrackQuery } from "@/redux/features/track/trackApi";
-import { useGetAllframworkQuery } from "@/redux/features/framwork/framworkApi";
 import { useGetAllroadmapQuery } from "@/redux/features/roadmap/roadmapApi";
 
 type Props = {};
