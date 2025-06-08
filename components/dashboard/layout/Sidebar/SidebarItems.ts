@@ -3,11 +3,13 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  CalendarDays,
-  Percent,
-  FileText,
-  List,
-  CircleDashed,
+  BookOpen,
+  Layers3,
+  Compass,
+  BookCopy,
+  PlusSquare,
+  GraduationCap,
+  FolderKanban,
 } from "lucide-react";
 
 export type SidebarItem = {
@@ -27,22 +29,78 @@ export const SidebarItems = () => {
       Icon: LayoutDashboard,
       path: "/",
     },
-
     {
-      label: "Users management",
+      label: "Users",
       Icon: Users,
+      path: "/users",
+    },
+    {
+      label: "Programs",
+      Icon: BookOpen,
       children: [
         {
-          label: "Users",
-          href: "/users",
+          label: "Programs",
+          href: "/programs",
+        },
+        {
+          label: "Add Program",
+          href: "/programs/add",
         },
       ],
+    },
+    {
+      label: "Tracks",
+      Icon: Layers3,
+      children: [
+        {
+          label: "Tracks",
+          href: "/tracks",
+        },
+        {
+          label: "Add Track",
+          href: "/tracks/add",
+        },
+      ],
+    },
+    {
+      label: "Frameworks",
+      Icon: FolderKanban,
+      children: [
+        {
+          label: "Frameworks",
+          href: "/frameworks",
+        },
+        {
+          label: "Add Framework",
+          href: "/frameworks/add",
+        },
+      ],
+    },
+    {
+      label: "Roadmaps",
+      Icon: Compass,
+      children: [
+        {
+          label: "Roadmaps",
+          href: "/roadmaps",
+        },
+        {
+          label: "Add Roadmap",
+          href: "/roadmaps/add",
+        },
+      ],
+    },
+    {
+      label: "Courses",
+      Icon: GraduationCap,
+      path: "/courses",
     },
   ];
 
   const IsActiveItem = ({ path }: { path: string }) => {
     const pathname = usePathname();
-    return pathname == path;
+    return pathname === path;
   };
+
   return { sidebarItems, IsActiveItem };
 };

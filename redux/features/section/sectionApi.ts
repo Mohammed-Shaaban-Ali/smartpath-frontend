@@ -37,7 +37,10 @@ const sectionApi = baseApi.injectEndpoints({
     }),
 
     // get single section
-    getSingleSection: build.query<SuccessResponse<ISection>, string>({
+    getSingleSection: build.query<
+      SuccessResponse<{ section: ISection }>,
+      string
+    >({
       query: (id) => `/section/${id}`,
       providesTags: ["section"],
     }),

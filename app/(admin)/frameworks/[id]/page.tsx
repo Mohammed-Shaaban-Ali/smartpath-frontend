@@ -5,31 +5,65 @@ import * as Yup from "yup";
 import CustomInput from "@/components/shared/Form/CustomInput";
 import { Button } from "@/components/ui/button";
 import { handleReqWithToaster } from "@/lib/handle-req-with-toaster";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import {
-  useAddSectionMutation,
-  useGetSingleSectionQuery,
-  useUpdateSectionMutation,
-} from "@/redux/features/section/sectionApi";
+import { useParams, useRouter } from "next/navigation";
+
 import { ImageUploader } from "@/components/shared/Form/ImageUploader";
 import MainTitle from "@/components/shared/MainTitle";
 import TextEditor from "@/components/shared/Form/TextEditor";
+
+import {
+  useGetSectionsForSelectQuery,
+  useGetTracksForSelectQuery,
+} from "@/redux/features/dropdown/dropdownApi";
+import CustomSelect from "@/components/shared/Form/CustomSelect";
+import {
+  useAddframworkMutation,
+  useGetSingleframworkQuery,
+  useUpdateframworkMutation,
+} from "@/redux/features/framwork/framworkApi";
 
 // Enhanced validation schema
 const SectionSchema = Yup.object({
   title: Yup.string()
     .required("Title is required")
     .min(3, "Title must be at least 3 characters long")
-    .max(100, "Title must not exceed 100 characters")
+    .max(10000, "Title must not exceed 10000 characters")
     .trim("Title cannot contain leading/trailing spaces"),
 
   body: Yup.string()
     .required("Body content is required")
     .min(10, "Body must be at least 10 characters long")
-    .max(1000, "Body must not exceed 1000 characters")
+    .max(100000, "Body must not exceed 100000 characters")
     .trim("Body cannot contain leading/trailing spaces"),
 
   icon: Yup.mixed()
+    .required("Icon is required")
+    .test("fileSize", "File size must be less than 5MB", (value) => {
+      if (!value) return false;
+      if (value instanceof File) {
+        return value.size <= 5 * 1024 * 1024; // 5MB
+      }
+      return true;
+    })
+    .test(
+      "fileType",
+      "Only image files are allowed (JPEG, PNG, GIF, WebP)",
+      (value) => {
+        if (!value) return false;
+        if (value instanceof File) {
+          const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+          ];
+          return allowedTypes.includes(value.type);
+        }
+        return true;
+      }
+    ),
+
+  icon3D: Yup.mixed()
     .required("Icon is required")
     .test("fileSize", "File size must be less than 5MB", (value) => {
       if (!value) return false;
@@ -64,25 +98,28 @@ function Page({}: Props) {
   const id = params.id as string;
   const router = useRouter();
 
-  const { data, isLoading: getLoading } = useGetSingleSectionQuery(id, {
+  const { data: track } = useGetTracksForSelectQuery();
+  const { data, isLoading: getLoading } = useGetSingleframworkQuery(id, {
     skip: !id || id == "add",
   });
-  const [addSection, { isLoading }] = useAddSectionMutation();
-  const [updateSection, { isLoading: updateLoading }] =
-    useUpdateSectionMutation();
+  const [addframework, { isLoading }] = useAddframworkMutation();
+  const [updateframework, { isLoading: updateLoading }] =
+    useUpdateframworkMutation();
   const handleSubmit = (values: any) => {
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("body", values.body);
     formData.append("icon", values.icon);
-    handleReqWithToaster("section loading ....", async () => {
+    formData.append("icon3D", values.icon3D);
+    formData.append("track", values.track?._id);
+    handleReqWithToaster("framework loading ....", async () => {
       if (id == "add") {
-        await addSection(formData).unwrap();
+        await addframework(formData).unwrap();
       } else {
-        await updateSection({ id, section: formData }).unwrap();
+        await updateframework({ id, framwork: formData }).unwrap();
       }
 
-      router.push("/sections");
+      router.push("/frameworks");
     });
   };
 
@@ -90,8 +127,8 @@ function Page({}: Props) {
   return (
     <section className="w-full flex flex-col gap-6">
       <MainTitle
-        title="Add Section"
-        description="Details of section information and status"
+        title={data?.data?.title ?? "Add framework"}
+        description="Details of frameworks information and status"
       />
       <section
         className=" border border-gray-200 p-5 rounded-md
@@ -102,6 +139,8 @@ function Page({}: Props) {
             title: data?.data?.title ?? "",
             body: data?.data?.body ?? "",
             icon: data?.data?.icon ?? null,
+            icon3D: data?.data?.icon3D ?? null,
+            track: data?.data?.track?._id ?? null,
           }}
           validationSchema={SectionSchema}
           onSubmit={handleSubmit}
@@ -109,7 +148,7 @@ function Page({}: Props) {
           {(formikProps) => (
             <form
               onSubmit={formikProps.handleSubmit}
-              className="w-full flex flex-col gap-4"
+              className="w-full grid grid-cols-1 md:grid-cols-2 gap-8"
             >
               <CustomInput
                 label="Title"
@@ -117,17 +156,39 @@ function Page({}: Props) {
                 type="text"
                 placeholder="Enter your title"
               />
+              <CustomSelect
+                formikProps={formikProps}
+                name="track"
+                title="track"
+                options={track?.data?.tracks ?? []}
+                placeholder="Select a track"
+                value="_id"
+                label="title"
+                initialValue={formikProps.values.track}
+              />
 
-              <TextEditor label="Body" formikProps={formikProps} name="body" />
               <ImageUploader
                 formikProps={formikProps}
                 title="Icon"
                 name="icon"
                 initialImage={data?.data?.icon}
               />
+              <ImageUploader
+                formikProps={formikProps}
+                title="Icon 3D"
+                name="icon3D"
+                initialImage={data?.data?.icon3D}
+              />
+              <div className="col-span-2">
+                <TextEditor
+                  label="Body"
+                  formikProps={formikProps}
+                  name="body"
+                />
+              </div>
               <Button
                 disabled={isLoading || updateLoading}
-                className=" ml-auto w-[200px]"
+                className=" ml-auto w-[200px] col-span-2 mt-5"
                 type="submit"
                 size={"lg"}
               >
