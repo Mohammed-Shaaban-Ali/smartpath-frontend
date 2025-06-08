@@ -37,10 +37,7 @@ const roadmapApi = baseApi.injectEndpoints({
     }),
 
     // get single roadmap
-    getSingleroadmap: build.query<
-      SuccessResponse<{ section: IRoadmap }>,
-      string
-    >({
+    getSingleroadmap: build.query<SuccessResponse<IRoadmap>, string>({
       query: (id) => `/roadmap/dashboard/${id}`,
       providesTags: ["roadmap"],
     }),

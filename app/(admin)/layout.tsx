@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/dashboard/layout/Sidebar";
+import { BreadcrumbDashboard } from "@/components/dashboard/shared/BreadcrumbDashboard";
 
 export default async function Layout({
   children,
@@ -11,7 +12,9 @@ export default async function Layout({
         <Sidebar />
       </section>
       <section className="flex flex-col flex-1 overflow-auto">
-        <div className="h-[60px] w-full bg-gray-50 border-b border-gray-200"></div>
+        <div className="h-[60px] w-full  flex items-center border-b border-gray-200">
+          <BreadcrumbDashboard />
+        </div>
         <section className="px-4 py-3">{children}</section>
       </section>
     </main>
