@@ -11,17 +11,26 @@ type ErrorGlobal = {
   statusCode: number;
   data: any;
 };
+
 export interface SuccessResponse<DataType = any> {
   message: string;
   statusCode: number;
   data: DataType;
 }
+
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://164.128.130.9:2530/api/v1",
   credentials: "include",
+  mode: "cors", // Explicitly set CORS mode
   prepareHeaders: (headers, { getState }) => {
+    // Set default headers
+    headers.set("Content-Type", "application/json");
+    headers.set("Accept", "application/json");
+
     const token = (getState() as any).auth.token;
-    if (token) headers.set("Authorization", `Bearer ${token}`);
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
     return headers;
   },
 });
@@ -37,14 +46,24 @@ const baseQueryWithReauth: typeof baseQuery = async (
   if (result.error) {
     const error = result.error as FetchBaseQueryError;
     const customizedError = error.data as ErrorGlobal;
-    if (customizedError.message)
-      toast.error(customizedError.message || " something went wrong");
+
+    // Log the full error for debugging
+    console.error("API Error:", error);
+
+    if (customizedError?.message) {
+      toast.error(customizedError.message || "Something went wrong");
+    } else {
+      toast.error("Network error occurred");
+    }
   } else {
     const customizedData = result.data as SuccessResponse;
-    if (method != "GET") toast.success(customizedData.message);
+    if (method !== "GET" && customizedData?.message) {
+      toast.success(customizedData.message);
+    }
   }
   return result;
 };
+
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
