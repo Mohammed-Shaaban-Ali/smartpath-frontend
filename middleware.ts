@@ -3,9 +3,7 @@ import type { NextRequest } from "next/server";
 import { SMARTPATHTOKEN } from "./constants";
 
 export function middleware(request: NextRequest) {
-  let token =
-    request.cookies.get(SMARTPATHTOKEN)?.value ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODQwM2NlNTcxZDY4NDI0NmI4MTI1ODEiLCJlbWFpbCI6Im1zNzUwMDc0NkBnbWFpbC5jb20iLCJpYXQiOjE3NDk0OTYyODksImV4cCI6MTc4MTA1Mzg4OX0.o8UM9OImXEWN9yDyjEypvDfAA0ZAugdStrGUWMpAIsQ";
+  let token = request.cookies.get(SMARTPATHTOKEN)?.value;
   // pathname
   const pathname = request.nextUrl.pathname;
 
