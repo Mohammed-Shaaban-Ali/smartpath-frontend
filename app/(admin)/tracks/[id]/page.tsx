@@ -106,7 +106,6 @@ function Page({}: Props) {
     formData.append("body", values.body);
     formData.append("icon", values.icon);
     formData.append("icon3D", values.icon3D);
-    formData.append("section", values.section?._id);
     handleReqWithToaster("track loading ....", async () => {
       if (id == "add") {
         await addTrack(formData).unwrap();
@@ -135,7 +134,6 @@ function Page({}: Props) {
             body: data?.data?.body ?? "",
             icon: data?.data?.icon ?? null,
             icon3D: data?.data?.icon3D ?? null,
-            section: data?.data?.section?._id ?? null,
           }}
           validationSchema={SectionSchema}
           onSubmit={handleSubmit}
@@ -145,22 +143,14 @@ function Page({}: Props) {
               onSubmit={formikProps.handleSubmit}
               className="w-full grid grid-cols-1 md:grid-cols-2 gap-8"
             >
-              <CustomInput
-                label="Title"
-                name="title"
-                type="text"
-                placeholder="Enter your title"
-              />
-              <CustomSelect
-                formikProps={formikProps}
-                name="section"
-                title="Section"
-                options={sections?.data ?? []}
-                placeholder="Select a section"
-                value="_id"
-                label="title"
-                initialValue={formikProps.values.section}
-              />
+              <div className=" col-span-2">
+                <CustomInput
+                  label="Title"
+                  name="title"
+                  type="text"
+                  placeholder="Enter your title"
+                />
+              </div>
 
               <ImageUploader
                 formikProps={formikProps}

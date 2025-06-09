@@ -5,6 +5,6 @@ export type IRoadmap = {
   title: string;
   icon: string;
   link: string;
-  framework: IFramwork;
+  track: IFramwork;
   createdAt: string;
 };

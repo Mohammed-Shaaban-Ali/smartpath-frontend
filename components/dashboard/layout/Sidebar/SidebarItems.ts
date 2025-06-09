@@ -34,20 +34,20 @@ export const SidebarItems = () => {
       Icon: Users,
       path: "/users",
     },
-    {
-      label: "Programs",
-      Icon: BookOpen,
-      children: [
-        {
-          label: "Programs",
-          href: "/programs",
-        },
-        {
-          label: "Add Program",
-          href: "/programs/add",
-        },
-      ],
-    },
+    // {
+    //   label: "Programs",
+    //   Icon: BookOpen,
+    //   children: [
+    //     {
+    //       label: "Programs",
+    //       href: "/programs",
+    //     },
+    //     {
+    //       label: "Add Program",
+    //       href: "/programs/add",
+    //     },
+    //   ],
+    // },
     {
       label: "Tracks",
       Icon: Layers3,
@@ -62,20 +62,20 @@ export const SidebarItems = () => {
         },
       ],
     },
-    {
-      label: "Frameworks",
-      Icon: FolderKanban,
-      children: [
-        {
-          label: "Frameworks",
-          href: "/frameworks",
-        },
-        {
-          label: "Add Framework",
-          href: "/frameworks/add",
-        },
-      ],
-    },
+    // {
+    //   label: "Frameworks",
+    //   Icon: FolderKanban,
+    //   children: [
+    //     {
+    //       label: "Frameworks",
+    //       href: "/frameworks",
+    //     },
+    //     {
+    //       label: "Add Framework",
+    //       href: "/frameworks/add",
+    //     },
+    //   ],
+    // },
     {
       label: "Roadmaps",
       Icon: Compass,

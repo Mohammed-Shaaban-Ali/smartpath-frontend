@@ -10,7 +10,10 @@ import { useParams, useRouter } from "next/navigation";
 import { ImageUploader } from "@/components/shared/Form/ImageUploader";
 import MainTitle from "@/components/shared/MainTitle";
 
-import { useGetFramworksForSelectQuery } from "@/redux/features/dropdown/dropdownApi";
+import {
+  useGetFramworksForSelectQuery,
+  useGetTracksForSelectQuery,
+} from "@/redux/features/dropdown/dropdownApi";
 import CustomSelect from "@/components/shared/Form/CustomSelect";
 
 import {
@@ -64,7 +67,7 @@ function Page({}: Props) {
   const id = params.id as string;
   const router = useRouter();
 
-  const { data: framworks } = useGetFramworksForSelectQuery();
+  const { data: trucks } = useGetTracksForSelectQuery();
   const { data, isLoading: getLoading } = useGetSingleroadmapQuery(id, {
     skip: !id || id == "add",
   });
@@ -76,7 +79,7 @@ function Page({}: Props) {
     formData.append("title", values.title);
     formData.append("icon", values.icon);
     formData.append("link", values.link);
-    formData.append("framework", values.framework?._id);
+    formData.append("track", values.truck?._id);
     handleReqWithToaster("roadmap loading ....", async () => {
       if (id == "add") {
         await addroadmap(formData).unwrap();
@@ -103,7 +106,7 @@ function Page({}: Props) {
           initialValues={{
             title: data?.data?.title ?? "",
             icon: data?.data?.icon ?? null,
-            framework: data?.data?.framework?._id ?? null,
+            truck: data?.data?.truck?._id ?? null,
             link: data?.data?.link ?? "",
           }}
           validationSchema={SectionSchema}
@@ -122,13 +125,13 @@ function Page({}: Props) {
               />
               <CustomSelect
                 formikProps={formikProps}
-                name="framework"
-                title="Framework"
-                options={framworks?.data ?? []}
-                placeholder="Select a framework"
+                name="truck"
+                title="Truck"
+                options={trucks?.data?.tracks ?? []}
+                placeholder="Select a truck"
                 value="_id"
                 label="title"
-                initialValue={formikProps.values.framework}
+                initialValue={formikProps.values.truck}
               />
               <CustomInput
                 label="Link"

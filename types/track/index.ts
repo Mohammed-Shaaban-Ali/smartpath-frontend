@@ -6,6 +6,5 @@ export type ITrack = {
   icon: string;
   icon3D: string;
   body: string;
-  section: ISection;
   createdAt: string;
 };

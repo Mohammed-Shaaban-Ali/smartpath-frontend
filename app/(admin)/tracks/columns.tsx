@@ -39,7 +39,7 @@ export const useColumns = () => {
               alt={row.original.title}
               width={200}
               height={200}
-              className=" w-[260px] min-h-[120px] object-cover"
+              className=" w-[160px] min-h-[100px] rounded-md border border-black object-cover"
             />
           </div>
         );
@@ -56,21 +56,13 @@ export const useColumns = () => {
               alt={row.original.title}
               width={200}
               height={200}
-              className=" w-[260px] min-h-[120px] object-cover"
+              className=" w-[160px] min-h-[100px] rounded-md border border-black object-cover"
             />
           </div>
         );
       },
     },
-    {
-      header: "Program Name",
-      accessorKey: "title",
-      cell: ({ row }) => {
-        return (
-          <span className="font-semibold">{row.original.section?.title}</span>
-        );
-      },
-    },
+
     {
       header: "Created At",
       accessorKey: "createdAt",
