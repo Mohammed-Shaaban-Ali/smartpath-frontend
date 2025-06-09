@@ -18,6 +18,7 @@ export interface SuccessResponse<DataType = any> {
 }
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://164.128.130.9:2530/api/v1",
+  credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as any).auth.token;
     if (token) headers.set("Authorization", `Bearer ${token}`);
