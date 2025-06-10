@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik, FieldArray } from "formik";
-import * as Yup from "yup";
 import CustomInput from "@/components/shared/Form/CustomInput";
 import { Button } from "@/components/ui/button";
 import { handleReqWithToaster } from "@/lib/handle-req-with-toaster";
@@ -18,61 +17,15 @@ import {
   useGetSinglecoursesQuery,
   useUpdatecoursesMutation,
 } from "@/redux/features/courses/coursesApi";
-
-// Dynamic validation schema based on mode
-const createValidationSchema = () =>
-  Yup.object({
-    title: Yup.string().required("Title is required"),
-    description: Yup.string().required("Description is required"),
-    image: Yup.mixed().required("Image is required"),
-    track: Yup.mixed().required("Track is required"),
-    sections: Yup.array()
-      .min(1, "At least one section is required")
-      .of(
-        Yup.object({
-          title: Yup.string().required("Section title is required"),
-          videos: Yup.array()
-            .min(1, "At least one video per section is required")
-            .of(
-              Yup.object({
-                title: Yup.string().required("Video title is required"),
-                duration: Yup.number()
-                  .typeError("Must be a number")
-                  .positive("Duration must be positive")
-                  .required("Duration is required"),
-                videoFile: Yup.mixed().required("Video file is required"),
-              })
-            ),
-        })
-      ),
-  });
-
-const updateValidationSchema = () =>
-  Yup.object({
-    title: Yup.string().required("Title is required"),
-    description: Yup.string().required("Description is required"),
-    image: Yup.mixed().nullable(),
-    track: Yup.mixed().required("Track is required"),
-    sections: Yup.array()
-      .min(1, "At least one section is required")
-      .of(
-        Yup.object({
-          title: Yup.string().required("Section title is required"),
-          videos: Yup.array()
-            .min(1, "At least one video per section is required")
-            .of(
-              Yup.object({
-                title: Yup.string().required("Video title is required"),
-                duration: Yup.number()
-                  .typeError("Must be a number")
-                  .positive("Duration must be positive")
-                  .required("Duration is required"),
-                videoFile: Yup.mixed().nullable(),
-              })
-            ),
-        })
-      ),
-  });
+import {
+  createValidationSchema,
+  updateValidationSchema,
+} from "@/schemas/courses";
+import {
+  getVideoDuration,
+  getYouTubeDuration,
+  isValidYouTubeUrl,
+} from "@/lib/coursesUtils";
 
 type Props = {};
 
@@ -81,6 +34,11 @@ function CreateUpdateCoursePage({}: Props) {
   const params = useParams();
   const id = params.id as string;
   const isEditMode = id && id !== "add";
+
+  // State for duration detection loading
+  const [durationDetectionStates, setDurationDetectionStates] = useState<
+    Record<string, boolean>
+  >({});
 
   const { data: track } = useGetTracksForSelectQuery();
   const { data: courseData, isLoading: isLoadingCourse } =
@@ -93,6 +51,24 @@ function CreateUpdateCoursePage({}: Props) {
 
   // Get course data for editing
   const course = courseData?.data;
+
+  // Helper function to manage duration detection loading state
+  const setDurationDetectionLoading = (
+    secIndex: number,
+    vidIndex: number,
+    loading: boolean
+  ) => {
+    const key = `${secIndex}-${vidIndex}`;
+    setDurationDetectionStates((prev) => ({
+      ...prev,
+      [key]: loading,
+    }));
+  };
+
+  const getDurationDetectionLoading = (secIndex: number, vidIndex: number) => {
+    const key = `${secIndex}-${vidIndex}`;
+    return durationDetectionStates[key] || false;
+  };
 
   // Prepare initial values based on mode
   const getInitialValues = () => {
@@ -109,11 +85,32 @@ function CreateUpdateCoursePage({}: Props) {
             _id: video._id, // Keep video ID for updates
             title: video.title || "",
             duration: video.duration || "",
+            videoType: video.videoType || "upload",
             videoFile: null, // For updates, we don't pre-fill the file input
             videoUrl: video.videoUrl || "", // Keep existing video URL
-          })) || [{ title: "", duration: "", videoFile: null }],
+            youtubeId: video.youtubeId || "", // Keep YouTube ID
+          })) || [
+            {
+              title: "",
+              duration: "",
+              videoType: "upload",
+              videoFile: null,
+              videoUrl: "",
+            },
+          ],
         })) || [
-          { title: "", videos: [{ title: "", duration: "", videoFile: null }] },
+          {
+            title: "",
+            videos: [
+              {
+                title: "",
+                duration: "",
+                videoType: "upload",
+                videoFile: null,
+                videoUrl: "",
+              },
+            ],
+          },
         ],
       };
     }
@@ -126,10 +123,94 @@ function CreateUpdateCoursePage({}: Props) {
       sections: [
         {
           title: "",
-          videos: [{ title: "", duration: "", videoFile: null }],
+          videos: [
+            {
+              title: "",
+              duration: "",
+              videoType: "upload",
+              videoFile: null,
+              videoUrl: "",
+            },
+          ],
         },
       ],
     };
+  };
+
+  // Handle video file change with auto-duration detection
+  const handleVideoFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    secIndex: number,
+    vidIndex: number,
+    formikProps: any
+  ) => {
+    const file = e.currentTarget.files?.[0] || null;
+
+    if (file) {
+      setDurationDetectionLoading(secIndex, vidIndex, true);
+
+      try {
+        // Set the file first
+        formikProps.setFieldValue(
+          `sections.${secIndex}.videos.${vidIndex}.videoFile`,
+          file
+        );
+
+        // Auto-detect duration
+        const duration = await getVideoDuration(file);
+        formikProps.setFieldValue(
+          `sections.${secIndex}.videos.${vidIndex}.duration`,
+          duration
+        );
+
+        console.log(`Auto-detected duration: ${duration} minutes`);
+      } catch (error) {
+        console.error("Could not detect video duration:", error);
+        // Keep manual input as fallback
+      } finally {
+        setDurationDetectionLoading(secIndex, vidIndex, false);
+      }
+    } else {
+      // Clear the file
+      formikProps.setFieldValue(
+        `sections.${secIndex}.videos.${vidIndex}.videoFile`,
+        null
+      );
+    }
+  };
+
+  // Handle YouTube URL change with auto-duration detection
+  const handleYouTubeUrlChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    secIndex: number,
+    vidIndex: number,
+    formikProps: any
+  ) => {
+    const url = e.target.value;
+
+    formikProps.setFieldValue(
+      `sections.${secIndex}.videos.${vidIndex}.videoUrl`,
+      url
+    );
+
+    if (url && isValidYouTubeUrl(url)) {
+      setDurationDetectionLoading(secIndex, vidIndex, true);
+
+      try {
+        const duration = await getYouTubeDuration(url);
+        if (duration) {
+          formikProps.setFieldValue(
+            `sections.${secIndex}.videos.${vidIndex}.duration`,
+            duration
+          );
+          console.log(`Auto-detected YouTube duration: ${duration} minutes`);
+        }
+      } catch (error) {
+        console.error("Could not fetch YouTube duration:", error);
+      } finally {
+        setDurationDetectionLoading(secIndex, vidIndex, false);
+      }
+    }
   };
 
   const handleSubmit = async (values: any) => {
@@ -154,22 +235,37 @@ function CreateUpdateCoursePage({}: Props) {
         (section: any, secIndex: number) => {
           const videosData = section.videos.map(
             (video: any, vidIndex: number) => {
-              // Create unique field name for each video file
-              const videoFieldName = `section-${secIndex}-video-${vidIndex}`;
-
-              // Only append video file if a new file is selected
-              if (video.videoFile instanceof File) {
-                formData.append(videoFieldName, video.videoFile);
-              }
-
-              return {
+              const baseVideoData = {
                 _id: video._id, // Include ID for updates
                 title: video.title,
                 duration: video.duration,
-                videoFieldName:
-                  video.videoFile instanceof File ? videoFieldName : undefined,
-                videoUrl: video.videoUrl, // Keep existing URL if no new file
+                videoType: video.videoType,
               };
+
+              if (video.videoType === "youtube") {
+                // For YouTube videos, just include the URL
+                return {
+                  ...baseVideoData,
+                  videoUrl: video.videoUrl,
+                };
+              } else {
+                // For uploaded videos
+                const videoFieldName = `section-${secIndex}-video-${vidIndex}`;
+
+                // Only append video file if a new file is selected
+                if (video.videoFile instanceof File) {
+                  formData.append(videoFieldName, video.videoFile);
+                }
+
+                return {
+                  ...baseVideoData,
+                  videoFieldName:
+                    video.videoFile instanceof File
+                      ? videoFieldName
+                      : undefined,
+                  videoUrl: video.videoUrl, // Keep existing URL if no new file
+                };
+              }
             }
           );
 
@@ -283,7 +379,13 @@ function CreateUpdateCoursePage({}: Props) {
                           push({
                             title: "",
                             videos: [
-                              { title: "", duration: "", videoFile: null },
+                              {
+                                title: "",
+                                duration: "",
+                                videoType: "youtube",
+                                videoFile: null,
+                                videoUrl: "",
+                              },
                             ],
                           })
                         }
@@ -294,7 +396,7 @@ function CreateUpdateCoursePage({}: Props) {
 
                     {formikProps.values?.sections?.map((section, secIndex) => (
                       <div
-                        key={`section-${secIndex}-${section.title}`}
+                        key={`section-${secIndex}-${section.title}-${section.videos?.length}`}
                         className="border border-gray-300 p-4 rounded-lg space-y-4 bg-gray-50"
                       >
                         <div className="flex justify-between items-start gap-4">
@@ -302,7 +404,6 @@ function CreateUpdateCoursePage({}: Props) {
                             <CustomInput
                               label={`Section ${secIndex + 1} Title`}
                               name={`sections.${secIndex}.title`}
-                              type="text"
                               placeholder="Enter section title"
                             />
                           </div>
@@ -332,7 +433,9 @@ function CreateUpdateCoursePage({}: Props) {
                                     pushVideo({
                                       title: "",
                                       duration: "",
+                                      videoType: "youtube",
                                       videoFile: null,
+                                      videoUrl: "",
                                     })
                                   }
                                 >
@@ -341,116 +444,188 @@ function CreateUpdateCoursePage({}: Props) {
                               </div>
 
                               {section.videos?.map(
-                                (video: any, vidIndex: number) => (
-                                  <div
-                                    key={video._id || vidIndex}
-                                    className="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 border border-gray-200 rounded bg-white"
-                                  >
-                                    <CustomInput
-                                      label="Video Title"
-                                      name={`sections.${secIndex}.videos.${vidIndex}.title`}
-                                      type="text"
-                                      placeholder="Enter video title"
-                                    />
+                                (video: any, vidIndex: number) => {
+                                  const isDetectingDuration =
+                                    getDurationDetectionLoading(
+                                      secIndex,
+                                      vidIndex
+                                    );
 
-                                    <CustomInput
-                                      label="Duration (minutes)"
-                                      name={`sections.${secIndex}.videos.${vidIndex}.duration`}
-                                      type="number"
-                                      placeholder="Enter duration"
-                                    />
+                                  return (
+                                    <div
+                                      key={video._id || vidIndex}
+                                      className="p-4 border border-gray-200 rounded bg-white space-y-4"
+                                    >
+                                      {/* Video Title and Duration Row */}
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="col-span-2">
+                                          <CustomInput
+                                            label="Video Title"
+                                            name={`sections.${secIndex}.videos.${vidIndex}.title`}
+                                            type="text"
+                                            placeholder="Enter video title"
+                                          />
+                                        </div>
 
-                                    <div className="space-y-2">
-                                      <label className="text-sm font-medium block">
-                                        Upload Video File
-                                      </label>
-                                      <div className="flex flex-col gap-2">
-                                        <input
-                                          type="file"
-                                          accept="video/*"
-                                          className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                          onChange={(e) => {
-                                            const file =
-                                              e.currentTarget.files?.[0] ||
-                                              null;
-                                            formikProps.setFieldValue(
-                                              `sections.${secIndex}.videos.${vidIndex}.videoFile`,
-                                              file
-                                            );
-                                          }}
-                                        />
-
-                                        {/* Show current video info for edit mode */}
-                                        {isEditMode &&
-                                          video.videoUrl &&
-                                          !video.videoFile && (
-                                            <div className="text-xs text-green-600 flex items-center gap-1">
-                                              <span>
-                                                ✓ Current video uploaded
-                                              </span>
-                                              <span className="text-gray-500">
-                                                (Upload new file to replace)
-                                              </span>
+                                        <div className="relative">
+                                          <CustomInput
+                                            label="Duration (minutes)"
+                                            name={`sections.${secIndex}.videos.${vidIndex}.duration`}
+                                            type="number"
+                                            placeholder={
+                                              isDetectingDuration
+                                                ? "Detecting..."
+                                                : "Enter duration"
+                                            }
+                                          />
+                                          {isDetectingDuration && (
+                                            <div className="absolute right-3 top-9">
+                                              <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
                                             </div>
                                           )}
-
-                                        {/* Show new file selected */}
-                                        {video.videoFile && (
-                                          <p className="text-green-600 text-xs">
-                                            ✓ {video.videoFile.name}
-                                          </p>
-                                        )}
-
-                                        {/* Show validation errors */}
-                                        {Array.isArray(
-                                          formikProps.errors.sections
-                                        ) &&
-                                          Array.isArray(
-                                            formikProps.touched.sections
-                                          ) &&
-                                          typeof formikProps.errors.sections?.[
-                                            secIndex
-                                          ] === "object" &&
-                                          typeof (
-                                            formikProps.errors.sections[
-                                              secIndex
-                                            ] as any
-                                          )?.videos?.[vidIndex] === "object" &&
-                                          (
-                                            formikProps.errors.sections[
-                                              secIndex
-                                            ] as any
-                                          )?.videos?.[vidIndex]?.videoFile &&
-                                          (
-                                            formikProps.touched.sections[
-                                              secIndex
-                                            ] as any
-                                          )?.videos?.[vidIndex]?.videoFile && (
-                                            <p className="text-red-500 text-xs">
-                                              {
-                                                (
-                                                  formikProps.errors.sections[
-                                                    secIndex
-                                                  ] as any
-                                                )?.videos?.[vidIndex]?.videoFile
-                                              }
-                                            </p>
-                                          )}
+                                        </div>
                                       </div>
 
+                                      {/* Video Type Selection */}
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium block">
+                                          Video Type
+                                        </label>
+                                        <div className="flex gap-4">
+                                          <label className="flex items-center gap-2">
+                                            <input
+                                              type="radio"
+                                              name={`sections.${secIndex}.videos.${vidIndex}.videoType`}
+                                              value="upload"
+                                              checked={
+                                                video.videoType === "upload"
+                                              }
+                                              onChange={(e) => {
+                                                formikProps.setFieldValue(
+                                                  `sections.${secIndex}.videos.${vidIndex}.videoType`,
+                                                  e.target.value
+                                                );
+                                                // Clear the other field when switching
+                                                formikProps.setFieldValue(
+                                                  `sections.${secIndex}.videos.${vidIndex}.videoUrl`,
+                                                  ""
+                                                );
+                                              }}
+                                            />
+                                            <span>Upload Video</span>
+                                          </label>
+                                          <label className="flex items-center gap-2">
+                                            <input
+                                              type="radio"
+                                              name={`sections.${secIndex}.videos.${vidIndex}.videoType`}
+                                              value="youtube"
+                                              checked={
+                                                video.videoType === "youtube"
+                                              }
+                                              onChange={(e) => {
+                                                formikProps.setFieldValue(
+                                                  `sections.${secIndex}.videos.${vidIndex}.videoType`,
+                                                  e.target.value
+                                                );
+                                                // Clear the other field when switching
+                                                formikProps.setFieldValue(
+                                                  `sections.${secIndex}.videos.${vidIndex}.videoFile`,
+                                                  null
+                                                );
+                                              }}
+                                            />
+                                            <span>YouTube Video</span>
+                                          </label>
+                                        </div>
+                                      </div>
+
+                                      {/* Conditional Video Input */}
+                                      {video.videoType === "upload" ? (
+                                        <div className="space-y-2">
+                                          <label className="text-sm font-medium block">
+                                            Upload Video File
+                                          </label>
+                                          <div className="flex flex-col gap-2">
+                                            <input
+                                              type="file"
+                                              accept="video/*"
+                                              className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                              onChange={(e) =>
+                                                handleVideoFileChange(
+                                                  e,
+                                                  secIndex,
+                                                  vidIndex,
+                                                  formikProps
+                                                )
+                                              }
+                                            />
+
+                                            {/* Show current video info for edit mode */}
+                                            {isEditMode &&
+                                              video.videoUrl &&
+                                              !video.videoFile && (
+                                                <div className="text-xs text-green-600 flex items-center gap-1">
+                                                  <span>
+                                                    ✓ Current video uploaded
+                                                  </span>
+                                                  <span className="text-gray-500">
+                                                    (Upload new file to replace)
+                                                  </span>
+                                                </div>
+                                              )}
+
+                                            {/* Show new file selected */}
+                                            {video.videoFile && (
+                                              <p className="text-green-600 text-xs">
+                                                ✓ {video.videoFile.name}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          <CustomInput
+                                            label="YouTube Video URL"
+                                            name={`sections.${secIndex}.videos.${vidIndex}.videoUrl`}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            onChange={(e: any) =>
+                                              handleYouTubeUrlChange(
+                                                e,
+                                                secIndex,
+                                                vidIndex,
+                                                formikProps
+                                              )
+                                            }
+                                          />
+                                          {video.videoUrl &&
+                                            isValidYouTubeUrl(
+                                              video.videoUrl
+                                            ) && (
+                                              <div className="text-xs text-green-600">
+                                                ✓ Valid YouTube URL
+                                              </div>
+                                            )}
+                                        </div>
+                                      )}
+
+                                      {/* Remove Video Button */}
                                       {section.videos.length > 1 && (
-                                        <Button
-                                          type="button"
-                                          variant="destructive"
-                                          size="sm"
-                                          onClick={() => removeVideo(vidIndex)}
-                                        >
-                                          Remove Video
-                                        </Button>
+                                        <div className="flex justify-end">
+                                          <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() =>
+                                              removeVideo(vidIndex)
+                                            }
+                                          >
+                                            Remove Video
+                                          </Button>
+                                        </div>
                                       )}
                                     </div>
-                                  </div>
-                                )
+                                  );
+                                }
                               )}
                             </div>
                           )}
