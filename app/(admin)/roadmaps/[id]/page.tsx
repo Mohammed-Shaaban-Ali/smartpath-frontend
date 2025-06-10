@@ -10,10 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ImageUploader } from "@/components/shared/Form/ImageUploader";
 import MainTitle from "@/components/shared/MainTitle";
 
-import {
-  useGetFramworksForSelectQuery,
-  useGetTracksForSelectQuery,
-} from "@/redux/features/dropdown/dropdownApi";
+import { useGetTracksForSelectQuery } from "@/redux/features/dropdown/dropdownApi";
 import CustomSelect from "@/components/shared/Form/CustomSelect";
 
 import {

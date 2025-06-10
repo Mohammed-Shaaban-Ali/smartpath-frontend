@@ -16,7 +16,6 @@ import {
   useUpdateTrackMutation,
 } from "@/redux/features/track/trackApi";
 import { useGetSectionsForSelectQuery } from "@/redux/features/dropdown/dropdownApi";
-import CustomSelect from "@/components/shared/Form/CustomSelect";
 
 // Enhanced validation schema
 const SectionSchema = Yup.object({
@@ -94,7 +93,6 @@ function Page({}: Props) {
   const id = params.id as string;
   const router = useRouter();
 
-  const { data: sections } = useGetSectionsForSelectQuery();
   const { data, isLoading: getLoading } = useGetSingleTrackQuery(id, {
     skip: !id || id == "add",
   });
