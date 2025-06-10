@@ -106,7 +106,7 @@ function Page({}: Props) {
           initialValues={{
             title: data?.data?.title ?? "",
             icon: data?.data?.icon ?? null,
-            truck: data?.data?.truck?._id ?? null,
+            truck: data?.data?.track?._id ?? null,
             link: data?.data?.link ?? "",
           }}
           validationSchema={SectionSchema}
