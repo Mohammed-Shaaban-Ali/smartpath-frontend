@@ -15,7 +15,6 @@ import {
   useGetSingleTrackQuery,
   useUpdateTrackMutation,
 } from "@/redux/features/track/trackApi";
-import { useGetSectionsForSelectQuery } from "@/redux/features/dropdown/dropdownApi";
 
 // Enhanced validation schema
 const SectionSchema = Yup.object({
