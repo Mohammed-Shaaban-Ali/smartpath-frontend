@@ -7,7 +7,7 @@ const authApi = baseApi.injectEndpoints({
     //  login
     login: build.mutation<SuccessResponse<IAuthState>, ILoginDTO>({
       query: (credentials) => ({
-        url: "auth/login",
+        url: "auth/login-admin",
         method: "POST",
         body: credentials,
       }),
