@@ -57,33 +57,6 @@ const SectionSchema = Yup.object({
         return true;
       }
     ),
-
-  icon3D: Yup.mixed()
-    .required("Icon is required")
-    .test("fileSize", "File size must be less than 5MB", (value) => {
-      if (!value) return false;
-      if (value instanceof File) {
-        return value.size <= 5 * 1024 * 1024; // 5MB
-      }
-      return true;
-    })
-    .test(
-      "fileType",
-      "Only image files are allowed (JPEG, PNG, GIF, WebP)",
-      (value) => {
-        if (!value) return false;
-        if (value instanceof File) {
-          const allowedTypes = [
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp",
-          ];
-          return allowedTypes.includes(value.type);
-        }
-        return true;
-      }
-    ),
 });
 
 type Props = {};
@@ -103,7 +76,6 @@ function Page({}: Props) {
     formData.append("title", values.title);
     formData.append("body", values.body);
     formData.append("icon", values.icon);
-    formData.append("icon3D", values.icon3D);
     handleReqWithToaster("track loading ....", async () => {
       if (id == "add") {
         await addTrack(formData).unwrap();
@@ -131,7 +103,6 @@ function Page({}: Props) {
             title: data?.data?.title ?? "",
             body: data?.data?.body ?? "",
             icon: data?.data?.icon ?? null,
-            icon3D: data?.data?.icon3D ?? null,
           }}
           validationSchema={SectionSchema}
           onSubmit={handleSubmit}
@@ -139,16 +110,14 @@ function Page({}: Props) {
           {(formikProps) => (
             <form
               onSubmit={formikProps.handleSubmit}
-              className="w-full grid grid-cols-1 md:grid-cols-2 gap-8"
+              className="w-full grid grid-cols-1 gap-8"
             >
-              <div className=" col-span-2">
-                <CustomInput
-                  label="Title"
-                  name="title"
-                  type="text"
-                  placeholder="Enter your title"
-                />
-              </div>
+              <CustomInput
+                label="Title"
+                name="title"
+                type="text"
+                placeholder="Enter your title"
+              />
 
               <ImageUploader
                 formikProps={formikProps}
@@ -156,22 +125,11 @@ function Page({}: Props) {
                 name="icon"
                 initialImage={data?.data?.icon}
               />
-              <ImageUploader
-                formikProps={formikProps}
-                title="Icon 3D"
-                name="icon3D"
-                initialImage={data?.data?.icon3D}
-              />
-              <div className="col-span-2">
-                <TextEditor
-                  label="Body"
-                  formikProps={formikProps}
-                  name="body"
-                />
-              </div>
+
+              <TextEditor label="Body" formikProps={formikProps} name="body" />
               <Button
                 disabled={isLoading || updateLoading}
-                className=" ml-auto w-[200px] col-span-2 mt-5"
+                className=" ml-auto w-[200px] mt-5"
                 type="submit"
                 size={"lg"}
               >

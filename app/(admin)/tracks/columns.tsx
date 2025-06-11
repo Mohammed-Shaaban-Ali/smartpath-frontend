@@ -45,23 +45,6 @@ export const useColumns = () => {
         );
       },
     },
-    {
-      header: "Icon 3D",
-      accessorKey: "icon 3D",
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center gap-2">
-            <Image
-              src={row.original.icon3D}
-              alt={row.original.title}
-              width={200}
-              height={200}
-              className=" w-[160px] min-h-[100px] rounded-md border border-black object-cover"
-            />
-          </div>
-        );
-      },
-    },
 
     {
       header: "Created At",
