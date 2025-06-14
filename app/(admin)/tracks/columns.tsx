@@ -47,10 +47,14 @@ export const useColumns = () => {
     },
 
     {
-      header: "Created At",
+      header: "last updated",
       accessorKey: "createdAt",
       cell: ({ row }) => {
-        return formatDate(row.original.createdAt);
+        return formatDate(
+          row.original.createdAt
+            ? row.original.createdAt
+            : row.original.updatedAt
+        );
       },
     },
     {

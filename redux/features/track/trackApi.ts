@@ -9,7 +9,7 @@ const sectionApi = baseApi.injectEndpoints({
       SuccessResponse<IPagenation<ITrack[]>>,
       { page: number }
     >({
-      query: ({ page }) => `/track/dashboard?page=${page}`,
+      query: ({ page }) => `/track/dashboard?page=${page}&limit=8`,
       providesTags: ["track"],
     }),
 

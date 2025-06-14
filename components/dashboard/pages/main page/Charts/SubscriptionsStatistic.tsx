@@ -25,7 +25,7 @@ function SubscriptionsStatistic({ data, isLoading }: Props) {
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
       className="min-h-[300px] col-span-3 flex flex-col gap-1.5 overflow-hidden"
     >
-      <h3 className="text-16 font-semibold ps-1.5">Courses Statistic</h3>
+      <h3 className="text-16 font-semibold ps-1.5">Courses statistics</h3>
       <div className="h-full w-full p-3 border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-300 flex flex-col gap-3">
         <div className="w-full flex items-center gap-4 justify-between">
           <h5 className="text-14 font-semibold text-black/40">

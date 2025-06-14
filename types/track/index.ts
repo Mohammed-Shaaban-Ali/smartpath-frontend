@@ -7,4 +7,5 @@ export type ITrack = {
   icon3D: string;
   body: string;
   createdAt: string;
+  updatedAt: string;
 };

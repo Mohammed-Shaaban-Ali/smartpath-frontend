@@ -84,7 +84,7 @@ export const useColumns = () => {
       cell: ({ row }) => {
         return (
           <span className="font-semibold">
-            {row.original.totalDuration} Minutes
+            {Number(row.original.totalDuration / 60).toFixed(1)} Hours
           </span>
         );
       },

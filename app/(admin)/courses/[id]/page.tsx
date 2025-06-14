@@ -26,8 +26,73 @@ import {
   getYouTubeDuration,
   isValidYouTubeUrl,
 } from "@/lib/coursesUtils";
+import { toast } from "sonner";
 
 type Props = {};
+
+// YouTube Playlist utilities
+const isValidYouTubePlaylist = (url: string): boolean => {
+  const playlistRegex = /[?&]list=([a-zA-Z0-9_-]+)/;
+  return playlistRegex.test(url);
+};
+
+const extractPlaylistId = (url: string): string | null => {
+  const match = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+};
+
+// YouTube API functions (you'll need to add your API key)
+const YOUTUBE_API_KEY = "AIzaSyBaEclL3XE7725lKKV4YEWa8SbRnsnlkqc";
+
+const fetchPlaylistVideos = async (playlistId: string) => {
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${YOUTUBE_API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch playlist");
+    }
+
+    const data = await response.json();
+    return data.items;
+  } catch (error) {
+    console.error("Error fetching playlist:", error);
+    throw error;
+  }
+};
+
+const fetchVideoDetails = async (videoIds: string[]) => {
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds.join(
+        ","
+      )}&key=${YOUTUBE_API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch video details");
+    }
+
+    const data = await response.json();
+    return data.items;
+  } catch (error) {
+    console.error("Error fetching video details:", error);
+    throw error;
+  }
+};
+
+const parseDuration = (duration: string): string => {
+  const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+  if (!match) return "0";
+
+  const hours = parseInt(match[1] || "0") || 0;
+  const minutes = parseInt(match[2] || "0") || 0;
+  const seconds = parseInt(match[3] || "0") || 0;
+
+  const totalMinutes = hours * 60 + minutes + (seconds > 30 ? 1 : 0);
+  return totalMinutes.toString();
+};
 
 function CreateUpdateCoursePage({}: Props) {
   const router = useRouter();
@@ -37,6 +102,11 @@ function CreateUpdateCoursePage({}: Props) {
 
   // State for duration detection loading
   const [durationDetectionStates, setDurationDetectionStates] = useState<
+    Record<string, boolean>
+  >({});
+
+  // State for playlist processing
+  const [playlistProcessing, setPlaylistProcessing] = useState<
     Record<string, boolean>
   >({});
 
@@ -68,6 +138,93 @@ function CreateUpdateCoursePage({}: Props) {
   const getDurationDetectionLoading = (secIndex: number, vidIndex: number) => {
     const key = `${secIndex}-${vidIndex}`;
     return durationDetectionStates[key] || false;
+  };
+
+  // Helper function to manage playlist processing state
+  const setPlaylistProcessingState = (
+    sectionIndex: number,
+    loading: boolean
+  ) => {
+    setPlaylistProcessing((prev) => ({
+      ...prev,
+      [sectionIndex]: loading,
+    }));
+  };
+
+  const getPlaylistProcessingState = (sectionIndex: number) => {
+    return playlistProcessing[sectionIndex] || false;
+  };
+
+  // Function to process YouTube playlist
+  const processYouTubePlaylist = async (
+    playlistUrl: string,
+    sectionIndex: number,
+    formikProps: any
+  ) => {
+    if (!isValidYouTubePlaylist(playlistUrl)) {
+      toast.error("Please enter a valid YouTube playlist URL");
+      return;
+    }
+
+    const playlistId = extractPlaylistId(playlistUrl);
+    if (!playlistId) {
+      toast.error("Could not extract playlist ID from URL");
+      return;
+    }
+
+    setPlaylistProcessingState(sectionIndex, true);
+
+    try {
+      // Fetch playlist items
+      const playlistItems = await fetchPlaylistVideos(playlistId);
+      console.log(playlistItems);
+      if (!playlistItems || playlistItems.length === 0) {
+        toast.error("No videos found in playlist or playlist is private");
+        return;
+      }
+
+      // Extract video IDs
+      const videoIds = playlistItems.map(
+        (item: any) => item.snippet.resourceId.videoId
+      );
+
+      // Fetch video details for durations
+      const videoDetails = await fetchVideoDetails(videoIds);
+
+      // Create video objects
+      const videos = playlistItems.map((item: any, index: number) => {
+        const videoDetail = videoDetails.find(
+          (detail: any) => detail.id === item.snippet.resourceId.videoId
+        );
+
+        const duration = videoDetail
+          ? parseDuration(videoDetail.contentDetails.duration)
+          : "0";
+
+        return {
+          title: item.snippet.title,
+          duration: duration,
+          videoType: "youtube",
+          videoFile: null,
+          videoUrl: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+          youtubeId: item.snippet.resourceId.videoId,
+        };
+      });
+
+      // Update the section with the videos
+      formikProps.setFieldValue(`sections.${sectionIndex}.videos`, videos);
+
+      toast.success(
+        `Successfully imported ${videos.length} videos from playlist!`
+      );
+    } catch (error) {
+      console.error("Error processing playlist:", error);
+      toast.error(
+        "Error processing playlist. Please check the URL and try again."
+      );
+    } finally {
+      setPlaylistProcessingState(sectionIndex, false);
+    }
   };
 
   // Prepare initial values based on mode
@@ -247,6 +404,7 @@ function CreateUpdateCoursePage({}: Props) {
                 return {
                   ...baseVideoData,
                   videoUrl: video.videoUrl,
+                  youtubeId: video.youtubeId,
                 };
               } else {
                 // For uploaded videos
@@ -420,30 +578,108 @@ function CreateUpdateCoursePage({}: Props) {
                             )}
                           </div>
 
+                          {/* YouTube Playlist Import */}
+                          <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-semibold text-blue-800 mb-2">
+                              📺 Import from YouTube Playlist
+                            </h4>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Paste YouTube playlist URL here..."
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                id={`playlist-input-${secIndex}`}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={getPlaylistProcessingState(secIndex)}
+                                onClick={() => {
+                                  const input = document.getElementById(
+                                    `playlist-input-${secIndex}`
+                                  ) as HTMLInputElement;
+                                  if (input?.value) {
+                                    processYouTubePlaylist(
+                                      input.value,
+                                      secIndex,
+                                      formikProps
+                                    );
+                                    input.value = ""; // Clear input after processing
+                                  }
+                                }}
+                              >
+                                {getPlaylistProcessingState(secIndex) ? (
+                                  <>
+                                    <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
+                                    Processing...
+                                  </>
+                                ) : (
+                                  "Import Videos"
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-blue-600 mt-2">
+                              💡 This will replace all current videos in this
+                              section with videos from the playlist
+                            </p>
+                          </div>
+
                           {/* Videos */}
                           <FieldArray name={`sections.${secIndex}.videos`}>
                             {({ push: pushVideo, remove: removeVideo }) => (
                               <div className="space-y-3 border-t pt-4">
                                 <div className="flex justify-between items-center">
                                   <h4 className="text-md font-medium">
-                                    Videos
+                                    Videos ({section.videos?.length || 0})
                                   </h4>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      pushVideo({
-                                        title: "",
-                                        duration: "",
-                                        videoType: "youtube",
-                                        videoFile: null,
-                                        videoUrl: "",
-                                      })
-                                    }
-                                  >
-                                    + Add Video
-                                  </Button>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        pushVideo({
+                                          title: "",
+                                          duration: "",
+                                          videoType: "youtube",
+                                          videoFile: null,
+                                          videoUrl: "",
+                                        })
+                                      }
+                                    >
+                                      + Add Video
+                                    </Button>
+                                    {section.videos?.length > 0 && (
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => {
+                                          if (
+                                            confirm(
+                                              "Are you sure you want to clear all videos in this section?"
+                                            )
+                                          ) {
+                                            formikProps.setFieldValue(
+                                              `sections.${secIndex}.videos`,
+                                              [
+                                                {
+                                                  title: "",
+                                                  duration: "",
+                                                  videoType: "youtube",
+                                                  videoFile: null,
+                                                  videoUrl: "",
+                                                },
+                                              ]
+                                            );
+                                          }
+                                        }}
+                                      >
+                                        Clear All
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
 
                                 {section.videos?.map(

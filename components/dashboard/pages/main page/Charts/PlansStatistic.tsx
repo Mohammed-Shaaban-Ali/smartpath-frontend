@@ -61,7 +61,7 @@ function PlansStatistic({ data, isLoading }: Props) {
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
         className="min-h-[300px] col-span-2 flex flex-col gap-1.5 overflow-hidden"
       >
-        <h3 className="text-16 font-semibold ps-1.5">Plans Statistic</h3>
+        <h3 className="text-16 font-semibold ps-1.5">Plans statistics</h3>
         <div className="h-full w-full p-3 border border-gray-200 rounded-xl">
           <div className="animate-pulse bg-gray-200 h-full rounded"></div>
         </div>
@@ -76,7 +76,7 @@ function PlansStatistic({ data, isLoading }: Props) {
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
       className="min-h-[300px] col-span-2 flex flex-col gap-1.5 overflow-hidden"
     >
-      <h3 className="text-16 font-semibold ps-1.5">Roadmap Statistic</h3>
+      <h3 className="text-16 font-semibold ps-1.5">Roadmap statistics</h3>
       <div className="h-full w-full p-3 border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-300 flex flex-col gap-3">
         <h5 className="text-14 font-semibold text-black/40">
           Total Users Vs Users With Roadmaps
