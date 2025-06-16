@@ -48,5 +48,13 @@ export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
   endpoints: (build) => ({}),
-  tagTypes: ["user", "section", "track", "framwork", "roadmap", "course"],
+  tagTypes: [
+    "user",
+    "section",
+    "track",
+    "framwork",
+    "roadmap",
+    "course",
+    "community",
+  ],
 });

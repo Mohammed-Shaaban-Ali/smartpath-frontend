@@ -9,7 +9,7 @@ import { useGetAllcoursesQuery } from "@/redux/features/courses/coursesApi";
 type Props = {};
 
 function LastInCourses({}: Props) {
-  const { data, isLoading } = useGetAllcoursesQuery({ page: 1 });
+  const { data, isLoading } = useGetAllcoursesQuery({ page: 1, limit: 5 });
   const columns = useColumns();
 
   return (

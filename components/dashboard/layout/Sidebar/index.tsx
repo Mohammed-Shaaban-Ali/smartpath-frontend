@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-
+import Logo from "@/public/logo.png";
 import { SidebarItem, SidebarItems } from "./SidebarItems";
 import { ChevronDown } from "lucide-react";
 
@@ -13,6 +13,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 export function Sidebar() {
   const { IsActiveItem, sidebarItems } = SidebarItems();
 
@@ -20,7 +21,16 @@ export function Sidebar() {
     <>
       <aside className="hidden lg:flex w-64  h-screen flex-col gap-2 border-r border-gray-200 ">
         <div className="relative border-b border-gray-200 h-[60px] w-full p-3 ">
-          <div className="h-10 w-full bg-red-200 "></div>
+          <div className="h-10 w-full flex items-center justify-start -ml-9 ">
+            <Image
+              width={200}
+              height={200}
+              src={Logo}
+              alt="logo"
+              className="w-full h-full object-contain "
+            />
+            <span className="text-24 -ml-8 font-semibold ">SmartPath</span>
+          </div>
         </div>
         <section className="p-4 flex flex-col gap-2.5">
           {sidebarItems?.map((item: SidebarItem, index) => {

@@ -7,9 +7,10 @@ const coursesApi = baseApi.injectEndpoints({
     //  get all courses
     getAllcourses: build.query<
       SuccessResponse<IPagenation<ICourses[]>>,
-      { page: number }
+      { page: number; limit?: number }
     >({
-      query: ({ page }) => `/courses/dashboard?page=${page}`,
+      query: ({ page, limit }) =>
+        `/courses/dashboard?page=${page}${limit ? `&limit=${limit}` : ""}`,
       providesTags: ["course"],
     }),
 

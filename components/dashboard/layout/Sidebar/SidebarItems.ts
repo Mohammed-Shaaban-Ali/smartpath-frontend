@@ -10,6 +10,7 @@ import {
   PlusSquare,
   GraduationCap,
   FolderKanban,
+  MessagesSquare,
 } from "lucide-react";
 
 export type SidebarItem = {
@@ -94,6 +95,11 @@ export const SidebarItems = () => {
       label: "Courses",
       Icon: GraduationCap,
       path: "/courses",
+    },
+    {
+      label: "Community",
+      Icon: MessagesSquare,
+      path: "/community",
     },
   ];
 
